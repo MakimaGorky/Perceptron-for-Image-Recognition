@@ -93,6 +93,24 @@ namespace NeuralNetwork1
             for (int i = 0; i < errorVector.Length; ++i)
                 errorVector[i] += error[i];
         }
+        
+        /// <summary>
+        /// Вычисляет квадратичную ошибку между ожидаемым выходом (Target) и выходом сети.
+        /// Не изменяет внутреннее состояние Sample.
+        /// </summary>
+        /// <param name="networkOutput">Массив фактических выходных значений сети</param>
+        /// <returns>Сумма квадратов ошибок</returns>
+        public double CalculateSquaredError(double[] networkOutput)
+        {
+            double errorSum = 0;
+            // this.Output хранит целевые значения (например, {0, 1, 0, 0})
+            for (int i = 0; i < Output.Length; ++i)
+            {
+                double diff = Output[i] - networkOutput[i];
+                errorSum += diff * diff;
+            }
+            return errorSum;
+        }
 
         /// <summary>
         /// Представление в виде строки

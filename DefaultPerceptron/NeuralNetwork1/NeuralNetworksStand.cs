@@ -103,8 +103,9 @@ namespace NeuralNetwork1
             {
                 //  Обучение запускаем асинхронно, чтобы не блокировать форму
                 var curNet = Net;
+                
                 double f = await Task.Run(() => curNet.TrainOnDataSet(samples, epoches, acceptable_error, parallel));
-
+                
                 label1.Text = "Щелкните на картинку для теста нового образа";
                 label1.ForeColor = Color.Green;
                 groupBox1.Enabled = true;

@@ -199,10 +199,12 @@ namespace NeuralNetwork1
                 {
                     Sample sample = samplesSet[indexes[i]];
                     Train(sample, acceptableError, parallel);
+                    
+                    double[] networkOutput = _outputs[_outputs.Length - 1];
 
                     // Считаем квадратичную ошибку
                     // Sample.EstimatedError() считает сумму квадратов ошибок выходов
-                    errorSum += sample.EstimatedError();
+                    errorSum += sample.CalculateSquaredError(networkOutput);
                 }
 
                 currentError = errorSum / samplesSet.Count; // Средняя квадратичная ошибка (MSE)
