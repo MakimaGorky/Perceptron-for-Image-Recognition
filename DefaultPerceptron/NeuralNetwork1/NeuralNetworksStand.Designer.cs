@@ -443,7 +443,7 @@
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedDialog;
             this.MaximizeBox = false;
             this.Name = "NeuralNetworksStand";
-            this.Text = "Банальный студенческий перспетрон";
+            this.Text = "Перцептрон для распознавания картинок";
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).EndInit();
             this.groupBox1.ResumeLayout(false);
             this.groupBox1.PerformLayout();

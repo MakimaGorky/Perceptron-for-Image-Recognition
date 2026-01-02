@@ -18,7 +18,6 @@ namespace NeuralNetwork1
             Application.SetCompatibleTextRenderingDefault(false);
             Application.Run(new NeuralNetworksStand(new Dictionary<string, Func<int[], BaseNetwork>>
             {
-                // Тут можно добавить свои нейросети
                 {"Accord.Net Perseptron", structure => new AccordNet(structure)},
                 {"Студентческий персептрон", structure => new StudentNetwork(structure)},
             }));

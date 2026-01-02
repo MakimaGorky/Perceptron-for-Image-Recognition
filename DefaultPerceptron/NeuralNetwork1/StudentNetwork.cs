@@ -108,13 +108,12 @@ namespace NeuralNetwork1
             // 1. Прямой проход
             RunForward(sample.input);
             
-            // Текущий learning rate (можно сделать адаптивным, но для простоты константа)
-            // Чем меньше alpha, тем стабильнее, но медленнее обучение
+            // Текущий learning rate (можно сделать адаптивным, но лень)
             double learningRate = 0.2; 
             int outputLayerIndex = _weights.Length - 1;
 
             // 2. Вычисление ошибки выходного слоя
-            // delta_out = (Target - Output) * f'(Output)
+            // delta = (y_t - y_o) * f'(y_o)
             for (int n = 0; n < _deltas[outputLayerIndex].Length; n++)
             {
                 double output = _outputs[outputLayerIndex][n];

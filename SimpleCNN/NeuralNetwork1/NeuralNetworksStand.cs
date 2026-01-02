@@ -24,7 +24,7 @@ namespace NeuralNetwork1
         {
             get
             {
-                var selectedItem = (string) netTypeBox.SelectedItem;
+                var selectedItem = (string)netTypeBox.SelectedItem;
                 if (!networksCache.ContainsKey(selectedItem))
                     networksCache.Add(selectedItem, CreateNetwork(selectedItem));
 
@@ -35,6 +35,9 @@ namespace NeuralNetwork1
         private readonly Dictionary<string, Func<int[], BaseNetwork>> networksFabric;
         private Dictionary<string, BaseNetwork> networksCache = new Dictionary<string, BaseNetwork>();
 
+        private FilterInfoCollection videoDevices;
+        private VideoCaptureDevice videoSource;
+        
         /// <summary>
         /// Конструктор формы стенда для работы с сетями
         /// </summary>
@@ -43,9 +46,9 @@ namespace NeuralNetwork1
         {
             InitializeComponent();
             this.networksFabric = networksFabric;
-            netTypeBox.Items.AddRange(this.networksFabric.Keys.Select(s => (object) s).ToArray());
+            netTypeBox.Items.AddRange(this.networksFabric.Keys.Select(s => (object)s).ToArray());
             netTypeBox.SelectedIndex = 0;
-            generator.FigureCount = (int) classCounter.Value;
+            generator.FigureCount = (int)classCounter.Value;
             button3_Click(this, null);
             pictureBox1.Image = Properties.Resources.Title;
         }
@@ -59,7 +62,7 @@ namespace NeuralNetwork1
             }
 
             StatusLabel.Text = "Ошибка: " + error;
-            int progressPercent = (int) Math.Round(progress * 100);
+            int progressPercent = (int)Math.Round(progress * 100);
             progressPercent = Math.Min(100, Math.Max(0, progressPercent));
             elapsedTimeLabel.Text = "Затраченное время : " + elapsedTime.Duration().ToString(@"hh\:mm\:ss\:ff");
             progressBar1.Value = progressPercent;
@@ -127,7 +130,7 @@ namespace NeuralNetwork1
         private void button1_Click(object sender, EventArgs e)
         {
 #pragma warning disable CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
-            train_networkAsync((int) TrainingSizeCounter.Value, (int) EpochesCounter.Value,
+            train_networkAsync((int)TrainingSizeCounter.Value, (int)EpochesCounter.Value,
                 (100 - AccuracyCounter.Value) / 100.0, parallelCheckBox.Checked);
 #pragma warning restore CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
         }
@@ -139,7 +142,7 @@ namespace NeuralNetwork1
             //  Создаём новую обучающую выборку
             SamplesSet samples = new SamplesSet();
 
-            for (int i = 0; i < (int) TrainingSizeCounter.Value; i++)
+            for (int i = 0; i < (int)TrainingSizeCounter.Value; i++)
                 samples.AddSample(generator.GenerateFigure());
 
             double accuracy = samples.TestNeuralNetwork(Net);
@@ -177,7 +180,7 @@ namespace NeuralNetwork1
 
         private void classCounter_ValueChanged(object sender, EventArgs e)
         {
-            generator.FigureCount = (int) classCounter.Value;
+            generator.FigureCount = (int)classCounter.Value;
             var vals = netStructureBox.Text.Split(';');
             if (!int.TryParse(vals.Last(), out _)) return;
             vals[vals.Length - 1] = classCounter.Value.ToString();
@@ -215,7 +218,7 @@ namespace NeuralNetwork1
         {
             infoStatusLabel.Text = "Тестировать нейросеть на тестовой выборке такого же размера";
         }
-        
+
         private void InitCamera()
         {
             videoDevices = new FilterInfoCollection(FilterCategory.VideoInputDevice);
@@ -252,7 +255,7 @@ namespace NeuralNetwork1
         {
             // Клонируем кадр, чтобы не было конфликтов потоков
             Bitmap bitmap = (Bitmap)eventArgs.Frame.Clone();
-            
+
             // Отображаем в PictureBox (предположим, у вас есть второй PictureBox для камеры или используем тот же)
             // pictureBox1.Image = bitmap; 
             // Внимание: pictureBox1 используется для вывода генератора. 
@@ -267,6 +270,7 @@ namespace NeuralNetwork1
                 videoSource.SignalToStop();
                 videoSource.WaitForStop();
             }
+
             base.OnFormClosing(e);
         }
 
@@ -278,26 +282,26 @@ namespace NeuralNetwork1
             // Берем текущий кадр (надо сохранить его из video_NewFrame в переменную класса или взять из PictureBox)
             // Допустим, мы берем Image из pictureBoxCamera (куда выводится поток)
             // Bitmap currentFrame = (Bitmap)pictureBoxCamera.Image.Clone();
-            
+
             // Но проще сделать Snapshot прямо здесь, если архитектура позволяет, 
             // но AForge работает асинхронно.
             // Решение: завести поле private Bitmap lastFrame; и обновлять его в video_NewFrame.
-            
+
             if (lastFrame == null) return;
 
             // 1. Обрабатываем изображение
             double[] inputVector = ImageProcessor.ProcessImage(lastFrame);
-            
+
             // 2. Создаем Sample (класс неизвестен - Undef)
             Sample sample = new Sample(inputVector, generator.FigureCount, FigureType.Undef);
-            
+
             // 3. Предсказываем
             FigureType prediction = Net.Predict(sample);
-            
+
             // 4. Вывод результата
             label1.Text = "Распознано с камеры: " + prediction.ToString();
             label1.ForeColor = Color.Blue;
-            
+
             // Показываем, что видит сеть (обработанное изображение)
             // pictureBox1.Image = ImageProcessor.TransformImage(lastFrame, 200, 200); 
         }
