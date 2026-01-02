@@ -9,11 +9,10 @@ namespace NeuralNetwork1
         // Входы нейрона включают +1 для нейрона смещения (Bias)
         private double[][][] _weights;
         
-        // Значения выходов нейронов на текущей итерации [слой][нейрон]
-        // Нужны для Backpropagation
+        // Значения выходов нейронов на текущей итерации [слой][нейрон] для backpropagation
         private double[][] _outputs;
 
-        // "Дельты" (ошибки) для каждого нейрона [слой][нейрон]
+        // Ошибки для каждого нейрона [слой][нейрон]
         private double[][] _deltas;
 
         private Random _random;
@@ -23,8 +22,7 @@ namespace NeuralNetwork1
             _random = new Random();
 
             // Инициализация массивов слоев
-            // structure.Length - 1, т.к. первый элемент - это размер входного вектора, а не слой нейронов
-            int layersCount = structure.Length - 1;
+            int layersCount = structure.Length - 1; // -1, т.к. первый элемент - это размер входного вектора, а не слой
             
             _weights = new double[layersCount][][];
             _outputs = new double[layersCount][];
@@ -32,8 +30,8 @@ namespace NeuralNetwork1
 
             for (int l = 0; l < layersCount; l++)
             {
-                int inputSize = structure[l];      // Количество входов для текущего слоя
-                int neuronsCount = structure[l + 1]; // Количество нейронов в текущем слое
+                int inputSize = structure[l];
+                int neuronsCount = structure[l + 1];
 
                 _weights[l] = new double[neuronsCount][];
                 _outputs[l] = new double[neuronsCount];
@@ -53,20 +51,19 @@ namespace NeuralNetwork1
             }
         }
 
-        // Сигмоидальная функция активации
+        // Сигмоида
         private double Sigmoid(double x)
         {
             return 1.0 / (1.0 + Math.Exp(-x));
         }
 
-        // Производная сигмоиды (через само значение функции y = Sigmoid(x))
+        // Производная сигмоиды
         private double SigmoidDerivative(double y)
         {
             return y * (1.0 - y);
         }
 
-        // Прямой проход (Feed Forward)
-        // Сохраняет выходы всех слоев для дальнейшего обучения
+        // Прямой проход. Сохраняет выходы всех слоев
         private double[] RunForward(double[] input)
         {
             double[] currentInput = input;
@@ -83,36 +80,36 @@ namespace NeuralNetwork1
                     {
                         sum += currentInput[w] * _weights[l][n][w];
                     }
-                    // Добавляем смещение (Bias). Представим, что последний вход всегда 1.0
-                    sum += 1.0 * _weights[l][n][currentInput.Length]; // Последний вес - для Bias
+                    // Добавляем смещение (Bias). Последний вход всегда 1.0
+                    sum += 1.0 * _weights[l][n][currentInput.Length];
 
                     _outputs[l][n] = Sigmoid(sum);
                 }
                 
-                // Выход текущего слоя становится входом для следующего
+                // Передаём на следующий слой
                 currentInput = _outputs[l];
             }
 
             return currentInput;
         }
 
-        // Реализация метода базового класса для предсказания
+        // Реализация метода предсказания
         protected override double[] Compute(double[] input)
         {
             return RunForward(input);
         }
 
-        // Обучение на одном образце (Backpropagation)
+        // Обучение на одном образце с Backpropagation
         public override int Train(Sample sample, double acceptableError, bool parallel)
         {
-            // 1. Прямой проход
+            // Прямой проход
             RunForward(sample.input);
             
             // Текущий learning rate (можно сделать адаптивным, но лень)
             double learningRate = 0.2; 
             int outputLayerIndex = _weights.Length - 1;
 
-            // 2. Вычисление ошибки выходного слоя
+            // Вычисление ошибки выходного слоя
             // delta = (y_t - y_o) * f'(y_o)
             for (int n = 0; n < _deltas[outputLayerIndex].Length; n++)
             {
@@ -121,14 +118,14 @@ namespace NeuralNetwork1
                 _deltas[outputLayerIndex][n] = error * SigmoidDerivative(output);
             }
 
-            // 3. Обратное распространение ошибки на скрытые слои
+            // Обратное распространение ошибки на скрытые слои
             for (int l = outputLayerIndex - 1; l >= 0; l--)
             {
                 for (int n = 0; n < _deltas[l].Length; n++)
                 {
                     double sumError = 0;
+                    
                     // Собираем ошибки со следующего слоя
-                    // Веса следующего слоя [l+1][next_neuron][current_neuron_index]
                     for (int nextN = 0; nextN < _deltas[l+1].Length; nextN++)
                     {
                         sumError += _deltas[l+1][nextN] * _weights[l+1][nextN][n];
@@ -139,10 +136,10 @@ namespace NeuralNetwork1
                 }
             }
 
-            // 4. Обновление весов (Градиентный спуск)
-            // Weight_new = Weight_old + LR * delta * input
+            // Обновление весов (Градиентный спуск)
+            // W_new = W_old + LR * delta * input
             
-            // Входом для первого слоя является sample.input
+            // Вход первого слоя - вход сети
             double[] inputs = sample.input;
 
             for (int l = 0; l < _weights.Length; l++)
@@ -154,15 +151,15 @@ namespace NeuralNetwork1
                     {
                         _weights[l][n][w] += learningRate * _deltas[l][n] * inputs[w];
                     }
-                    // Обновляем вес Bias (вход для него всегда 1.0)
+                    // Обновляем вес Bias
                     _weights[l][n][inputs.Length] += learningRate * _deltas[l][n] * 1.0;
                 }
                 
-                // Вход для следующего слоя - это выход текущего (перед следующей итерацией цикла l)
+                // Вход следующего слоя - это выход текущего
                 inputs = _outputs[l];
             }
 
-            return 1; // Возвращаем 1, так как сделали одну итерацию
+            return 1; // Сделали одну итерацию
         }
 
         // Обучение на датасете
@@ -174,7 +171,7 @@ namespace NeuralNetwork1
             double currentError = double.MaxValue;
             int epoch = 0;
 
-            // Массив индексов для перемешивания выборки (SGD работает лучше, если данные идут случайно)
+            // Перемешивания выборки
             int[] indexes = new int[samplesSet.Count];
             for (int i = 0; i < samplesSet.Count; i++) indexes[i] = i;
 
@@ -182,13 +179,14 @@ namespace NeuralNetwork1
             {
                 epoch++;
                 
-                // Перемешивание индексов (Fisher-Yates shuffle)
+                // Fisher-Yates shuffle
                 for (int i = indexes.Length - 1; i > 0; i--)
                 {
                     int j = _random.Next(i + 1);
-                    int temp = indexes[i];
+                    // Может я совсем нуб C# 🤔
+                    int temp = indexes[i]; 
                     indexes[i] = indexes[j];
-                    indexes[j] = temp;
+                    indexes[j] = temp; 
                 }
 
                 double errorSum = 0;
@@ -201,15 +199,15 @@ namespace NeuralNetwork1
                     
                     double[] networkOutput = _outputs[_outputs.Length - 1];
 
-                    // Считаем квадратичную ошибку
-                    // Sample.EstimatedError() считает сумму квадратов ошибок выходов
-                    errorSum += sample.CalculateSquaredError(networkOutput);
+                    sample.ProcessPrediction(networkOutput);
+
+                    // Квадратичная ошибка
+                    errorSum += sample.EstimatedError();
                 }
 
-                currentError = errorSum / samplesSet.Count; // Средняя квадратичная ошибка (MSE)
+                currentError = errorSum / samplesSet.Count; // SE -> MSE
 
-                // Оповещаем форму о прогрессе (например, каждые 5% эпох или каждую эпоху, если их мало)
-                // Чтобы не тормозить GUI, можно обновлять реже
+                // Оповещаем форму о прогрессе
                 OnTrainProgress((double)epoch / epochsCount, currentError, stopwatch.Elapsed);
             }
 
